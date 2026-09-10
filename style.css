@@ -771,51 +771,52 @@ body.dark-mode .aide-box { background: #1c1409 !important; border-color: #92400e
 body.dark-mode .aide-box strong { color: #fbbf24 !important; }
 
 /* =========================================
-   NAVIGATION PRINCIPALE PAR ONGLETS (façon navigateur)
-   Remplace le défilement infini par 7 panneaux dédiés, un seul visible à la fois.
+   NAVIGATION PRINCIPALE (STYLE BOUTONS ARRONDIS)
    ========================================= */
 .main-tabs-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    justify-content: center; /* Centre les boutons horizontalement */
+    align-items: center;     /* Centre les boutons verticalement */
+    gap: 8px;                /* Espace entre les boutons */
     background: #e2e8f0;
-    padding: 8px 8px 0;
-    border-radius: 12px 12px 0 0;
+    padding: 10px;           /* Un padding égal partout pour un bel encadrement */
+    border-radius: 12px;     /* Arrondit aussi la barre de fond */
     border-bottom: 2px solid var(--primary);
-    position: sticky;
-    top: 0;
-    z-index: 50;
     margin-top: 16px;
+    position: sticky; 
+    top: 0; 
+    z-index: 100; 
 }
 .main-tab-btn {
     background: #cbd5e1;
     color: #475569;
     border: 1px solid #94a3b8;
-    border-bottom: none;
-    border-radius: 8px 8px 0 0;
-    padding: 10px 16px;
+    border-radius: 20px;     /* MAGIE : Arrondit TOUS les coins des boutons */
+    padding: 8px 16px;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 13.5px;
     cursor: pointer;
     transition: 0.15s;
     white-space: nowrap;
 }
-.main-tab-btn:hover { background: #e2e8f0; color: var(--text-main); }
+.main-tab-btn:hover { 
+    background: #94a3b8; 
+    color: white; 
+}
 .main-tab-btn.active {
-    background: var(--card);
-    color: var(--primary-dark);
-    border-color: var(--primary);
-    box-shadow: 0 -2px 6px rgba(5,150,105,0.15);
-    position: relative;
-    top: 1px;
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary-dark);
+    box-shadow: 0 2px 6px rgba(5,150,105,0.3);
 }
 
 .main-tab-panel {
-    grid-column: span 12; /* CRITIQUE : sans ça, le panel n'occupe qu'1/12 de la largeur du grid parent .dashboard */
+    grid-column: span 12;
     display: flex;
     flex-direction: column;
     gap: 24px;
-    padding-top: 20px;
+    padding-top: 10px;
     animation: fadeInTab 0.25s ease;
 }
 @keyframes fadeInTab {
@@ -824,79 +825,14 @@ body.dark-mode .aide-box strong { color: #fbbf24 !important; }
 }
 
 body.dark-mode .main-tabs-bar { background: #1e293b; border-bottom-color: var(--primary); }
-body.dark-mode .main-tab-btn { background: #0f172a; color: #94a3b8; border-color: #334155; }
-body.dark-mode .main-tab-btn:hover { background: #1e293b; color: #e2e8f0; }
-body.dark-mode .main-tab-btn.active { background: var(--card); color: #6ee7b7; border-color: #10b981; }
+body.dark-mode .main-tab-btn { background: #0f172a; color: #94a3b8; border: 1px solid #334155; }
+body.dark-mode .main-tab-btn:hover { background: #334155; color: #e2e8f0; }
+body.dark-mode .main-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary-dark); }
 
-/* Sur mobile, les onglets passent en grille scrollable horizontale pour rester lisibles */
 @media (max-width: 768px) {
-    .main-tabs-bar {
-        overflow-x: auto;
-        flex-wrap: nowrap;
-        -webkit-overflow-scrolling: touch;
-    }
-    .main-tab-btn { font-size: 12px; padding: 9px 12px; }
+    .main-tab-btn { font-size: 12.5px; padding: 8px 12px; }
 }
 
-/* =========================================================
-   NAVIGATION PRINCIPALE PAR ONGLETS (façon onglets navigateur)
-   Remplace l'ancienne longue page à scroller par 7 panneaux,
-   un seul visible à la fois.
-   ========================================================= */
-.main-tabs-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-    background: #e2e8f0;
-    border-radius: 12px 12px 0 0;
-    padding: 8px 8px 0;
-    margin: 18px 0 0;
-    overflow-x: auto;
-    scrollbar-width: thin;
-}
-.main-tab-btn {
-    appearance: none;
-    border: 1px solid #cbd5e1;
-    border-bottom: none;
-    background: #f1f5f9;
-    color: #475569;
-    font-weight: 700;
-    font-size: 13.5px;
-    padding: 10px 18px;
-    border-radius: 10px 10px 0 0;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s, color 0.15s, transform 0.1s;
-    position: relative;
-    top: 1px;
-}
-.main-tab-btn:hover { background: #e2e8f0; color: var(--text-main); }
-.main-tab-btn.active {
-    background: var(--card);
-    color: var(--primary-dark);
-    border-color: var(--border, #cbd5e1);
-    border-bottom: 3px solid var(--primary);
-    box-shadow: 0 -3px 8px rgba(0,0,0,0.04);
-    z-index: 2;
-}
-
-/* Le panneau actif se rattache visuellement à l'onglet actif (effet "carte de classeur") */
-.main-tab-panel {
-    background: transparent;
-    border-radius: 0 0 14px 14px;
-    padding-top: 14px;
-}
-
-body.dark-mode .main-tabs-bar { background: #0f172a; }
-body.dark-mode .main-tab-btn { background: #1e293b; color: #94a3b8; border-color: #334155; }
-body.dark-mode .main-tab-btn:hover { background: #273549; color: #e2e8f0; }
-body.dark-mode .main-tab-btn.active { background: var(--card); color: #fbbf24; border-bottom-color: #fbbf24; }
-
-/* Mobile : onglets compacts, toujours sur une seule ligne défilable horizontalement */
-@media (max-width: 720px) {
-    .main-tabs-bar { gap: 0; padding: 6px 6px 0; }
-    .main-tab-btn { padding: 9px 13px; font-size: 12.5px; border-radius: 8px 8px 0 0; }
-}
 
 /* Centrer les cartes Google GeoChart */
 #curve_chart, #belgium_chart, #world_chart {

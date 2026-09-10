@@ -1137,15 +1137,48 @@ function genererTop50(daysData) {
     grid.innerHTML = gridHtml;
 }
 
+// === VARIABLE GLOBALE POUR SAUVEGARDER LES DONNÉES DU CALENDRIER ===
+window.donneesPourCalendrier = null;
+
 function genererAgenda(daysData) {
+    // 1. On sauvegarde les données pour plus tard sans dessiner le calendrier
+    window.donneesPourCalendrier = daysData;
+    
+    // 2. Si un vieux calendrier était là, on le détruit pour le refaire proprement
+    if (fullCalendarInstance) {
+        fullCalendarInstance.destroy();
+        fullCalendarInstance = null;
+    }
+    
+    // 3. Si on est déjà sur l'onglet Calendrier (ex: rechargement de page), on le dessine tout de suite
+    const panelCal = document.getElementById('panel-calendar');
+    if (panelCal && panelCal.style.display === 'block') {
+        dessinerCalendrierMaintenant();
+    }
+}
+
+// NOUVELLE FONCTION : Ne dessine le calendrier QUE quand l'onglet devient visible !
+function dessinerCalendrierMaintenant() {
     const calendarEl = document.getElementById('calendar');
-    if(!calendarEl) return;
-    calendarEl.innerHTML = '';
-    const events = Object.keys(daysData).map(date => ({ start: date, allDay: true, extendedProps: { physiques: daysData[date].physiques, labs: daysData[date].labs, dateBrute: date } }));
+    if (!calendarEl || !window.donneesPourCalendrier) return;
+
+    // S'il existe déjà et qu'il est juste caché, on lui redonne sa taille
+    if (fullCalendarInstance) {
+        fullCalendarInstance.updateSize();
+        return;
+    }
+
+    calendarEl.innerHTML = ''; 
+    const daysData = window.donneesPourCalendrier;
+    const events = Object.keys(daysData).map(date => ({ 
+        start: date, 
+        allDay: true, 
+        extendedProps: { physiques: daysData[date].physiques, labs: daysData[date].labs, dateBrute: date } 
+    }));
 
     fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth', locale: 'fr', firstDay: 1,
-        height: 650, // hauteur fixe : évite le bug "100%" quand panel-calendar est display:none
+        height: 650, 
         headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridYear' },
         events: events,
         eventContent: function(arg) {
@@ -1162,22 +1195,6 @@ function genererAgenda(daysData) {
     fullCalendarInstance.render();
     const datesTriees = Object.keys(daysData).sort();
     if (datesTriees.length > 0) fullCalendarInstance.gotoDate(datesTriees[datesTriees.length - 1]);
-
-    // Recalibre quand le panneau Calendrier devient visible (ResizeObserver sur le panel, pas seulement #calendar)
-    const panelCal = document.getElementById('panel-calendar');
-    // ✅ CORRECTIF DÉFINITIF : peu importe COMMENT l'onglet Agenda devient visible
-    // (clic, restauration au chargement, vider+recharger, etc.), FullCalendar se
-    // recalibre automatiquement dès que son conteneur change réellement de taille.
-    if (window.ResizeObserver && !calendarEl._roAttached) {
-        const ro = new ResizeObserver(() => {
-            if (fullCalendarInstance) fullCalendarInstance.updateSize();
-        });
-        ro.observe(calendarEl.parentElement || calendarEl);
-        calendarEl._roAttached = true;
-    }
-    if (isMainPanelVisible('calendar')) {
-        requestAnimationFrame(() => { if (fullCalendarInstance) fullCalendarInstance.updateSize(); });
-    }
 }
 
 // === GESTION DES FENÊTRES MODAL (POP-UP) ===
@@ -2477,20 +2494,23 @@ function activerMainTabBtn(tabId) {
 
 // Recalcule les widgets tierces (FullCalendar, GeoChart, Leaflet) une fois le panneau visible.
 function rafraichirWidgetsOnglet(tabId) {
-    if (tabId === 'calendar' && fullCalendarInstance) {
-        fullCalendarInstance.updateSize();
-    }
-    if (tabId === 'maps' && window.lastLocationsData) {
-        let countries = Object.keys(window.lastLocationsData).filter(c => c !== 'Inconnu' && window.lastLocationsData[c].count > 0);
-        countries.sort((a, b) => window.lastLocationsData[b].count - window.lastLocationsData[a].count);
-        appellerQuandGooglePret(() => {
-            dessinerCartesActive(window.lastLocationsData, countries.slice(0, 5));
-            if (window.lastFtfList) dessinerCarteFTFDynamique(window.lastFtfList);
-        });
-    }
-    if (tabId === 'challenge360' && map360Instance) {
-        map360Instance.invalidateSize();
-    }
+    setTimeout(() => {
+        if (tabId === 'calendar') {
+            // LA MAGIE : On dessine le calendrier maintenant qu'il a la place de s'afficher !
+            dessinerCalendrierMaintenant();
+        }
+        if (tabId === 'maps' && window.lastLocationsData) {
+            let countries = Object.keys(window.lastLocationsData).filter(c => c !== 'Inconnu' && window.lastLocationsData[c].count > 0);
+            countries.sort((a, b) => window.lastLocationsData[b].count - window.lastLocationsData[a].count);
+            appellerQuandGooglePret(() => {
+                dessinerCartesActive(window.lastLocationsData, countries.slice(0, 5));
+                if (window.lastFtfList) dessinerCarteFTFDynamique(window.lastFtfList);
+            });
+        }
+        if (tabId === 'challenge360' && map360Instance) {
+            map360Instance.invalidateSize();
+        }
+    }, 150); // Le délai de 150ms permet à l'onglet de s'ouvrir avant de dessiner
 }
 
 function switchMainTab(tabId) {
