@@ -185,6 +185,10 @@ function nettoyerTexteGeocaching(texteBrut) {
     let lignes = texteBrut.split('\n').map(l => l.trim());
     let textePropre = "";
     
+    // Regex sans le "^" au début pour ignorer les statuts comme "Archivée " ou "Archived " ajoutés par Geocaching.com
+    const regexLogType = /(Found it|Write note|Didn't find it|Disable|Archive|Needs Maintenance|Webcam Photo Taken|Attended)/i;
+    const regexDate = /(Found it|Write note|Didn't find it|Disable|Archive|Needs Maintenance|Webcam Photo Taken|Attended):\s*(\d{2}\/\d{2}\/\d{4})/i;
+
     for (let i = 0; i < lignes.length; i++) {
         let ligne = lignes[i];
         if (!ligne) continue;
@@ -199,15 +203,15 @@ function nettoyerTexteGeocaching(texteBrut) {
         }
 
         // --- CAS 2 : COPIER-COLLER GEOCACHING.COM (Brouillons bruts) ---
-        let matchTypeDate = ligne.match(/^(Found it|Write note|Didn't find it|Disable|Archive|Needs Maintenance|Webcam Photo Taken|Attended):\s*(\d{2}\/\d{2}\/\d{4})/i);
+        let matchTypeDate = ligne.match(regexDate);
         
         if (matchTypeDate) {
             // Sous-cas A : Le nom de la cache est sur la ligne DU DESSUS (Format brut Geocaching)
-            if (i > 0 && lignes[i-1] && !lignes[i-1].match(/^(Found it|Write note|Didn't find it|Disable|Archive|Needs Maintenance)/i)) {
+            if (i > 0 && lignes[i-1] && !lignes[i-1].match(regexLogType)) {
                 textePropre += `${matchTypeDate[0]}\n${lignes[i-1]}\n\n`;
             } 
             // Sous-cas B : Le nom de la cache est sur la ligne DU DESSOUS (Texte déjà propre)
-            else if (i + 1 < lignes.length && lignes[i+1] && !lignes[i+1].match(/^(Found it|Write note|Didn't find it|Disable|Archive|Needs Maintenance)/i)) {
+            else if (i + 1 < lignes.length && lignes[i+1] && !lignes[i+1].match(regexLogType)) {
                 textePropre += `${matchTypeDate[0]}\n${lignes[i+1]}\n\n`;
             }
         }
