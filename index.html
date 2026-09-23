@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <link rel="icon" type="image/png" href="/images/pdpfinigeo.png">
 </head>
 <body>
 
@@ -60,7 +61,7 @@
                 <strong>🛠️ Comment obtenir ces fichiers ?</strong>
                 <ol>
                     <li><b>Caches (.gpx)</b> : sur Geocaching.com, va dans <i>/account/dashboard → Planifier → Pocket Query </i> dans la catégorie <i></i>"My Finds" </i>(Mes découvertes) → <i>Ajouter à la liste d'attente </i> → Télécharge le fichier .gpx puis charge-le ici.</li>
-                    <li><b>Labs (.txt)</b> : sur Geocaching.com, va sur la page de tes statistiques Adventure Lab, copie la liste de tes labs trouvés dans un fichier .txt.</li>
+                    <li><b>Labs (.txt)</b> : sur ProjectGC, va sur Profil → Labcaches loguées → sur PC (ctrl + a) / ou sur téléphone tout sélectionner → colle le contenu dans un fichier .txt. comme ce que tu a copier ne modifier rien</li>
                 </ol>
             </div>
             <div style="display:flex; gap:8px; margin-bottom:8px; margin-top:10px;">
@@ -81,7 +82,7 @@
             <div id="aideUploadBrouillons" class="aide-box" style="display:none; text-align:left;">
                 <strong>🛠️ À quoi servent les brouillons ?</strong>
                 <ol>
-                    <li>Cette section permet de fusionner des trouvailles très récentes (pas encore dans ton export GPX officiel) grâce à un export "brouillon" : un .txt de logs Project-GC <i>et/ou</i> un petit .gpx exporté manuellement pour la zone récente.</li>
+                    <li>Cette section permet de fusionner des trouvailles très récentes (dans tes brouillons) grâce à un ctrl + a dans brouillon sur Gecaching.com (Il faut avoir descendu jusqu'en bas de la page) et après ctrl+v dans un fichier "brouillon" : un .txt. puis un .gpx en ayant fait une liste de tout vos brouillons grâce à l'application (brouillon → logo carte en haut a gauche → trois points en haut a gauche → ajouter tout a la liste) </li>
                     <li>Charge le .txt en 1, puis le .gpx en 2 : le dashboard fusionne automatiquement ces données fraîches avec tes données principales pour ne rien perdre en attendant ton prochain export complet.</li>
                 </ol>
             </div>
@@ -118,11 +119,6 @@
 
         <div class="summary-card">
             <div class="summary-text" id="summaryText"></div>
-            <div class="search-bar">
-                <label>Chercher un jour :</label>
-                <input type="date" id="searchDate">
-                <button onclick="rechercherJour()">🔎 Voir</button>
-            </div>
         </div>
 
         <div class="kpi-grid">
@@ -176,11 +172,19 @@
         <div class="main-tab-panel" id="panel-calendar" style="display:none;">
 
         <div class="card card-full" id="calendar-container">
-            <div class="card-header">
-                <h3>📅 Agenda des découvertes</h3>
+            <div class="card-header" style="display:flex; flex-wrap:wrap; gap:15px; align-items:center;">
+                <h3 style="margin-right:auto;">📅 Agenda des découvertes</h3>
+                
+                <!-- Barre de recherche adaptée au thème (fini les couleurs en dur !) -->
+                <div class="calendar-search" onclick="event.stopPropagation()">
+                    <label>Aller au :</label>
+                    <input type="date" id="searchDateCalendar">
+                    <button onclick="naviguerCalendrier()">🔎 Voir</button>
+                </div>
             </div>
             <div id="calendar"></div>
         </div>
+        
         <div class="card card-full">
             <div class="card-header">
                 <h3>🗓️ Calendrier des 366 Jours</h3>
@@ -689,6 +693,18 @@
         <h2 id="modalDate">Détails</h2>
         <div id="modalTotal"></div>
         <ul id="modalTypesList" class="type-list"></ul>
+    </div>
+</div>
+
+<!-- FENÊTRE DE CONFIRMATION ISOLÉE (UNIQUEMENT POUR FTF) -->
+<div id="ftfConfirmModal" class="modal" style="z-index: 2000; display: none;">
+    <div class="modal-content" style="max-width: 400px; text-align: center; padding: 25px;">
+        <h2 style="color: #ef4444; border-bottom: none; margin-top: 0; padding-bottom: 5px;">⚠️ Confirmation</h2>
+        <p id="ftfConfirmMessage" style="font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 25px; line-height: 1.5; white-space: pre-wrap;"></p>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button onclick="document.getElementById('ftfConfirmModal').style.display='none'" class="btn-clear-small" style="padding: 10px 20px; font-size: 14px; background: #e2e8f0; color: #475569; border: none; font-weight: bold;">Annuler</button>
+            <button id="btnFtfConfirmAction" class="btn-clear-small" style="padding: 10px 20px; font-size: 14px; background: #ef4444; color: white; border: none; font-weight: bold;">Supprimer</button>
+        </div>
     </div>
 </div>
 

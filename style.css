@@ -849,3 +849,69 @@ body.dark-mode .main-tab-btn.active { background: var(--primary); color: white; 
     justify-content: center;
     padding: 20px 0;
 }
+
+/* =========================================
+   CALENDRIER : RECHERCHE ET BOUTONS
+   ========================================= */
+.calendar-search {
+    margin: 0;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.calendar-search label { color: #475569; font-weight: bold; font-size: 14px; margin: 0; }
+.calendar-search input { color: #1e293b; background: white; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 4px; outline: none; font-weight: bold; }
+.calendar-search button { background: var(--primary); color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.calendar-search button:hover { background: var(--primary-dark); }
+
+/* Boutons de navigation FullCalendar (Thème Clair) */
+.fc .fc-button-primary {
+    background-color: #e2e8f0 !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+    font-weight: bold !important;
+    text-transform: capitalize !important;
+    box-shadow: none !important;
+}
+.fc .fc-button-primary:not(:disabled):hover {
+    background-color: #cbd5e1 !important;
+    color: #1e293b !important;
+}
+.fc .fc-button-primary:not(:disabled):active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+    background-color: var(--primary) !important;
+    border-color: var(--primary-dark) !important;
+    color: white !important;
+}
+
+/* =========================================
+   ADAPTATION THÈME SOMBRE (DARK MODE)
+   ========================================= */
+body.dark-mode .calendar-search { background: #0f172a; border-color: #334155; }
+body.dark-mode .calendar-search label { color: #94a3b8; }
+body.dark-mode .calendar-search input { 
+    background: #1e293b; 
+    color: white; 
+    border-color: #475569; 
+    color-scheme: dark; /* Magie : rend la petite icône calendrier blanche ! */
+}
+
+body.dark-mode .fc .fc-button-primary {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+}
+body.dark-mode .fc .fc-button-primary:not(:disabled):hover {
+    background-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode .fc .fc-button-primary:not(:disabled):active,
+body.dark-mode .fc .fc-button-primary:not(:disabled).fc-button-active {
+    background-color: var(--primary) !important;
+    border-color: var(--primary-dark) !important;
+    color: white !important;
+}

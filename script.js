@@ -1226,7 +1226,10 @@ function ouvrirModal366(md) {
 }
 
 function fermerModal() { document.getElementById('dayModal').style.display = 'none'; }
-window.onclick = function(e) { if (e.target == document.getElementById('dayModal')) fermerModal(); }
+window.onclick = function(e) { 
+    if (e.target == document.getElementById('dayModal')) fermerModal(); 
+    if (e.target == document.getElementById('ftfConfirmModal')) document.getElementById('ftfConfirmModal').style.display = 'none';
+}
 
 // === PALIERS ET JALONS (CLONE PROJECT-GC) ===
 function genererPaliers(allFinds) {
@@ -2378,8 +2381,17 @@ function lancerAnalyseFtfOublies() {
             }
 
             // --- 3. TRAITEMENT DES EXCLUSIONS ET DES SCORES ---
+            let blacklist = JSON.parse(localStorage.getItem('ftfBlacklist') || '[]');
+
             for (let [key, c] of fusionMap) {
                 let fullTxt = c.fullText || "";
+
+                // NOUVEAU FILTRE : Caches supprimées manuellement par l'utilisateur
+                let idToCheck = (c.gcCode && c.gcCode !== "P-GC" && c.gcCode !== "?") ? c.gcCode : nettoyerNomCache(c.name);
+                if (blacklist.includes(idToCheck)) {
+                    exclusResults.push({ date: c.date, name: c.name, log: fullTxt, raison: "❌ Supprimé manuellement" });
+                    continue;
+                }
 
                 // Filtre 1 : Le joueur a déjà mis les crochets officiels
                 if (estOfficiellementTaggue(fullTxt)) {
@@ -2461,11 +2473,27 @@ function afficherTableauFtfOublies() {
             ? `<a href="https://coord.info/${ftf.gcCode}" target="_blank" style="color:#2563eb; text-decoration:none; font-weight:bold;">${ftf.gcCode}</a>`
             : `<span style="color:#64748b; font-weight:bold;">${ftf.gcCode || 'P-GC'}</span>`;
 
+        let safeId = "log-" + Math.random().toString(36).substr(2, 5);
+        let safeNameEsc = escHtml(ftf.name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        
+        // BOUTON SUPPRIMER DÉDIÉ
+        let btnSupprimer = `<button onclick="supprimerFtf('${ftf.gcCode}', '${safeNameEsc}'); event.stopPropagation();" class="btn-clear-small" style="padding:2px 8px; font-size:12px; float:right; margin-left:10px; background:#fee2e2; color:#ef4444; border-color:#fca5a5;" title="Supprimer définitivement cette cache">🗑️</button>`;
+
         html += `
-        <tr>
-            <td style="font-size:12px;"><strong>${dStr}</strong><br><span style="color:#94a3b8; font-size:10px;">${ftf.source || ''}</span></td>
-            <td style="text-align:center;"><span style="background:${colorProba}22; color:${colorProba}; padding:4px 8px; border-radius:12px; font-weight:bold; font-size:12px;">${iconProba} ${ftf.proba}%</span></td>
-            <td>${gcLink}<br><span style="font-size:13px;">${escHtml(ftf.name)}</span></td>
+        <tr style="cursor:pointer; transition: background 0.2s;" onclick="let el = document.getElementById('${safeId}'); el.style.display = (el.style.display === 'none') ? 'table-row' : 'none';" onmouseover="this.style.background='#f1f5f9';" onmouseout="this.style.background='transparent';">
+            <td style="font-size:12px; width:20%;"><strong>${dStr}</strong><br><span style="color:#94a3b8; font-size:10px;">${ftf.source || ''}</span></td>
+            <td style="text-align:center; width:15%;"><span style="background:${colorProba}22; color:${colorProba}; padding:4px 8px; border-radius:12px; font-weight:bold; font-size:12px;">${iconProba} ${ftf.proba}%</span></td>
+            <td>
+                ${btnSupprimer}
+                ${gcLink}<br>
+                <span style="font-size:13px;">${escHtml(ftf.name)}</span>
+                <span style="font-size:10px; color:#94a3b8; float:right; clear:both; margin-top:4px;">👁️ Voir le log ▼</span>
+            </td>
+        </tr>
+        <tr id="${safeId}" style="display:none; background:var(--bg);">
+            <td colspan="3" style="padding: 15px; font-style: italic; color: var(--text-muted); font-size: 12px; white-space: pre-wrap; border-left: 4px solid ${colorProba};">
+                <strong>📝 Contenu du log complet :</strong><br>${escHtml(ftf.fullText)}
+            </td>
         </tr>`;
     });
 
@@ -2537,7 +2565,36 @@ function toggleAide(id) {
     box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
 }
 
-// 🗑️ GESTION DU TIROIR DES CACHES EXCLUES
+// 🗑️ GESTION DE LA SUPPRESSION D'UN FTF AVEC SA PROPRE FENÊTRE
+function supprimerFtf(gcCode, nom) {
+    const modal = document.getElementById('ftfConfirmModal');
+    document.getElementById('ftfConfirmMessage').innerText = `Voulez-vous supprimer définitivement "${nom}" des résultats FTF ?\n\nElle sera totalement ignorée lors des prochaines analyses.`;
+    
+    const btnConfirm = document.getElementById('btnFtfConfirmAction');
+    btnConfirm.onclick = function() {
+        let blacklist = JSON.parse(localStorage.getItem('ftfBlacklist') || '[]');
+        let idToBan = (gcCode && gcCode !== "P-GC" && gcCode !== "?") ? gcCode : nettoyerNomCache(nom);
+        
+        if (!blacklist.includes(idToBan)) {
+            blacklist.push(idToBan);
+            localStorage.setItem('ftfBlacklist', JSON.stringify(blacklist));
+        }
+        
+        // Retirer immédiatement du tableau
+        let index = ftfResults.findIndex(c => c.gcCode === gcCode && c.name === nom);
+        if (index > -1) {
+            let cacheIgnoree = ftfResults.splice(index, 1)[0];
+            exclusResults.push({ date: cacheIgnoree.date, name: cacheIgnoree.name, log: cacheIgnoree.fullText, raison: "❌ Supprimé manuellement" });
+        }
+        
+        afficherTableauFtfOublies();
+        afficherExclus();
+        modal.style.display = 'none';
+    };
+    
+    modal.style.display = 'block';
+}
+
 function toggleExclus() {
     const content = document.getElementById('exclusContent');
     const chevron = document.getElementById('chevronExclus');
@@ -2554,8 +2611,15 @@ function afficherExclus() {
     document.getElementById('exclusCount').innerText = exclusResults.length;
     let container = document.getElementById('exclusContent');
     
+    // Bouton de restauration s'il y a des caches supprimées
+    let btnResetBlacklist = '';
+    let blacklist = JSON.parse(localStorage.getItem('ftfBlacklist') || '[]');
+    if (blacklist.length > 0) {
+        btnResetBlacklist = `<button onclick="localStorage.removeItem('ftfBlacklist'); alert('Caches restaurées ! Relancez l\\'analyse pour les voir.'); lancerAnalyseFtfOublies();" style="display:block; width:100%; margin-bottom:10px; background:#f1f5f9; border:1px solid #cbd5e1; padding:6px; border-radius:6px; cursor:pointer; font-weight:bold; color:#475569;">🔄 Restaurer les caches supprimées</button>`;
+    }
+
     if (exclusResults.length === 0) {
-        container.innerHTML = `<p style="color: #94a3b8; text-align: center; margin: 5px;">Aucune exclusion pour le moment.</p>`;
+        container.innerHTML = btnResetBlacklist + `<p style="color: #94a3b8; text-align: center; margin: 5px;">Aucune exclusion pour le moment.</p>`;
         return;
     }
 
@@ -2564,7 +2628,6 @@ function afficherExclus() {
     exclusResults.forEach(e => {
         let textLogSafe = escHtml(e.log);
         let textLogShort = textLogSafe.substring(0, 150) + (textLogSafe.length > 150 ? '...' : '');
-        
         html += `
         <div style="border-bottom: 1px solid #e2e8f0; padding: 8px 0;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -2574,7 +2637,7 @@ function afficherExclus() {
             <div style="color: #64748b; margin-top: 4px; font-style: italic;">"${textLogShort}"</div>
         </div>`;
     });
-    container.innerHTML = html;
+    container.innerHTML = btnResetBlacklist + html;
 }
 
 // 🗑️ GESTION DU TIROIR DES CACHES EXCLUES
@@ -3293,4 +3356,14 @@ function copierCodeLua() {
         document.execCommand('copy');
         alert('✅ Copié dans le presse-papiers !');
     });
+}
+// === DÉPLACEMENT DU CALENDRIER DEPUIS LA BARRE DE RECHERCHE ===
+function naviguerCalendrier() {
+    const inputDate = document.getElementById('searchDateCalendar').value;
+    if (!inputDate) return;
+    
+    // On déplace instantanément le calendrier au mois et à l'année choisis, de façon transparente
+    if (typeof fullCalendarInstance !== 'undefined' && fullCalendarInstance) {
+        fullCalendarInstance.gotoDate(inputDate);
+    }
 }
