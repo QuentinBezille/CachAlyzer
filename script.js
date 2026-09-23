@@ -2919,7 +2919,7 @@ function loadGeoJsonForCountry(containerId, countryKey, counts, maxVal, scale, c
     const bgColor = isDark ? '#1e293b' : '#e0f2fe';
 
     if (countryKey === 'France' || countryKey === 'france') {
-        geoJsonUrl = 'regions-france.geojson';
+        geoJsonUrl = null;
     } else if (/belgi/i.test(countryKey)) {
         geoJsonUrl = null; // Will draw world map fallback for Belgium
     } else {
@@ -3203,12 +3203,29 @@ function dessinerCarteFTFDynamique(ftfList) {
 
     // Load France GeoJSON for FTF
     if (topCountry === 'France' || /france/i.test(topCountry)) {
-        fetch('regions-france.geojson')
+        // On récupère le fichier officiel directement sur internet (Fini l'erreur 404 !)
+        fetch('https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/regions-version-simplifiee.geojson')
             .then(r => r.json())
             .then(geoData => {
+                // Astuce : on normalise les noms pour que "Centre-Val-de-Loire" (ton GPX) match avec "Centre-Val de Loire" (la carte)
+                let locsNorm = {};
+                for (let k in locs) locsNorm[normaliserPourComparaison(k)] = locs[k];
+
                 const layer = L.geoJson(geoData, {
-                    style: f => styleRegion(f, locs, maxVal, scale),
-                    onEachFeature: (f, l) => onEachFeature(f, l, locs, maxVal)
+                    style: f => {
+                        const name = normaliserPourComparaison(f.properties.nom || '');
+                        const count = locsNorm[name] || 0;
+                        const color = count > 0 ? interpColor(count, 0, maxVal, scale) : '#e2e8f0';
+                        return { fillColor: color, color: '#fff', weight: 1.5, fillOpacity: 0.8, opacity: 0.7 };
+                    },
+                    onEachFeature: (f, l) => {
+                        const name = f.properties.nom || '?';
+                        const count = locsNorm[normaliserPourComparaison(name)] || 0;
+                        const pct = maxVal > 0 ? ((count / maxVal) * 100).toFixed(1) : '0';
+                        l.bindPopup(`<b>📍 ${name}</b><br>Trouvailles : <b>${count}</b><br>${pct}% du total`);
+                        l.on({ mouseover: () => l.setStyle({ weight: 3, fillOpacity: 0.9 }),
+                               mouseout:  () => l.setStyle({ weight: 1.5, fillOpacity: 0.8 }) });
+                    }
                 }).addTo(map);
                 map.fitBounds(layer.getBounds().pad(0.2));
                 addLeafletLegend(map, 'map_ftf_dynamic', scale, locs, maxVal);
