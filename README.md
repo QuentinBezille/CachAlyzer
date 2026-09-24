@@ -1,65 +1,94 @@
 # 🧭 Dashboard Geocaching Master Pro
 
-Bienvenue sur le **Dashboard Geocaching Master Pro**. Cet outil est une interface de statistiques avancée conçue pour les passionnés de géocaching souhaitant une analyse plus fine que ce que proposent les outils standards.
-
-L'objectif principal est de vous permettre de visualiser vos performances **avant même de loguer officiellement** vos caches (via vos brouillons) et de traquer des exploits spécifiques comme les FTF oubliés.
-
-## 🔒 Confidentialité & Vie Privée
-**La sécurité de vos données est au cœur de ce projet.**
-*   **Local Only :** Tout le traitement des données est effectué **localement** dans votre navigateur.
-*   **Aucun serveur :** Vos fichiers GPX, vos coordonnées personnelles et vos logs ne sont **jamais envoyés sur le web**. Ils restent sur votre ordinateur.
+**Dashboard Geocaching Master Pro** est une application web puissante, 100% locale et sans serveur, conçue pour les géocacheurs exigeants. Elle permet d'analyser vos fichiers de découvertes (`.gpx` et `.txt`) pour générer des statistiques interactives, traquer vos challenges (Fizzy, Jasmer, 366, 360°) et retrouver intelligemment vos FTF oubliés.
 
 ---
 
-## 🚀 Fonctionnalités principales
+## ✨ Fonctionnalités Principales
 
-*   **Mode Prévisionnel :** Importez vos brouillons pour visualiser vos stats en temps réel (séries, challenges, compteurs) avant de valider vos logs.
-*   **Challenge 360° (Premium) :** Visualisez votre progression azimutale avec une carte sectorielle interactive et un radar polaire.
-*   **Top 50 des meilleures journées :** Un classement dynamique de vos records de découvertes.
-*   **Détecteur de FTF Oubliés :** Identifiez les caches où vous avez logué en premier mais où le tag `[FTF]` est absent.
+### 📊 1. Statistiques et Habitudes
+*   **KPIs Dynamiques :** Total des caches, répartition physiques/labs, plus longues séries (streaks), et périodes creuses (slumps).
+*   **Graphiques Avancés :** Découvertes mensuelles/cumulées, répartition par types et tailles (via *Chart.js*).
+*   **Radars d'habitudes :** Analyse de vos jours de la semaine et mois de l'année les plus prolifiques.
 
----
+### 🗓️ 2. Calendrier Interactif
+*   Agenda complet (via *FullCalendar*) affichant vos trouvailles au jour le jour.
+*   Barre de recherche rapide pour sauter directement à une date spécifique.
+*   Classement interactif du "Top 50" de vos meilleures journées de géocaching.
 
-## 📂 Préparation des données
+### 🎯 3. Suivi des Challenges Internationaux
+*   **Matrice D/T (Fizzy 81) :** Grille interactive avec calcul de la difficulté/terrain moyenne.
+*   **Calendrier 366 Jours :** Remplissez chaque jour de l'année.
+*   **Challenge Jasmer :** Grille chronologique (de l'an 2000 à aujourd'hui) basée sur la date de pose des caches. Onglets de filtrage par type inclus !
+*   **Challenge 360° (Premium) :** Radar azimutal calculant vos découvertes autour de vos coordonnées de domicile, avec vue sur carte interactive.
 
-Pour que le Dashboard soit complet, assurez-vous de charger les bons fichiers :
+### 🏆 4. Moteur FTF & Paliers (Exclusivité)
+*   **Liste des FTF :** Détection automatique via vos tags (`{*FTF*}`, `[FTF]`, etc.).
+*   **Moteur d'Oublis Hybride V5 :** Croise un GPX de zone avec vos logs Project-GC pour calculer une probabilité (de 0 à 100%) d'avoir fait un FTF non taggué, grâce à une analyse sémantique (détection d'aveux d'échec, STF, mots-clés).
+*   **Paliers & Premières fois :** Liste de vos jalons (100, 500, 1000...) et de vos "premières" par pays, région et type de cache.
 
-### 1. Caches trouvées (Historique personnel)
-*   **Format :** `.gpx` (Pocket Query "My Finds").
-*   **Utilisation :** Statistiques globales, Matrice D/T, Calendrier 366 jours.
+### 🗺️ 5. Cartographie Dynamique
+*   Cartes du monde, d'Europe et choroplèthes par régions (France, Belgique, USA, etc.) générées dynamiquement.
+*   Système de repli intelligent utilisant *Leaflet* et des GeoJSON externes pour un affichage net et détaillé.
 
-### 2. Adventures Labs
-*   **Format :** `.txt`.
-*   **Utilisation :** Intégration des découvertes Lab Caches.
-*   **Instructions :** Copiez-collez votre liste depuis Project-GC dans un fichier texte.
-
-### 3. Brouillons (Mode Prévisionnel)
-*   **Format :** `.txt` ou `.gpx`.
-*   **Utilisation :** Simulation des stats avant logs officiels.
-
-### 4. FTF Oubliés (Détecteur avancé)
-*   **Format :** `.gpx` (Pocket Query de zone ou Liste).
-*   **Important :** Le fichier "My Finds" ne suffit pas ici car il ne contient pas les logs des autres joueurs. Pour détecter un FTF oublié, le script doit comparer vos logs avec ceux des autres joueurs de la zone. Utilisez une **Pocket Query géographique**[cite: 8] pour avoir accès à l'historique complet des logs de la zone[cite: 10].
-
----
-
-## 🛠️ Utilisation
-
-1.  Rendez-vous sur [l'interface en ligne](https://quentinbezille.github.io/Geocaching-Statistique/).
-2.  Dans le panneau de configuration, renseignez votre **Pseudo** et vos **Coordonnées de domicile** (pour calculer l'azimut du challenge 360°).
-3.  Chargez vos fichiers via les boutons dédiés.
-4.  Activez le **Mode Prévisionnel** pour inclure vos brouillons dans les calculs.
-5.  Utilisez le raccourci clavier `F` pour replier/déplier les sections et `P` pour basculer le mode prévisionnel rapidement.
+### 🛠️ 6. Outils Créateurs
+*   **Générateur de script Lua :** Créez facilement le code nécessaire pour configurer un Checker Project-GC personnalisé (basé sur le type, la taille, la difficulté, le mot-clé, etc.).
 
 ---
 
-## 💡 Conseils pour le Challenge 360°
-*   Le curseur vous permet de définir votre objectif de caches par secteur (de 1 à 15).
-*   Le graphique réagit dynamiquement : 
-    *   **Vert :** Objectif atteint.
-    *   **Orange :** Secteur en cours.
-    *   **Rouge :** Secteur vide.
+## 🚀 Installation & Lancement
+
+L'application est **entièrement locale** (Client-Side). Aucune base de données ni serveur (PHP/Node) n'est requis. Vos données ne quittent jamais votre ordinateur.
+
+1. Clonez ou téléchargez ce dépôt sur votre machine.
+2. Assurez-vous d'avoir les 3 fichiers de base dans le même dossier :
+   * `index.html` (Structure)
+   * `style.css` (Design & Mode Sombre)
+   * `script.js` (Moteur d'analyse)
+3. Ouvrez simplement **`index.html`** avec n'importe quel navigateur web moderne (Chrome, Firefox, Edge, Safari).
 
 ---
 
-*Projet développé par Quentin Bezille. Les données géocaching sont la propriété de Groundspeak Inc.*
+## 📂 Comment importer ses données ?
+
+Pour profiter pleinement du Dashboard, vous devez fournir vos données officielles :
+
+### 1. Fichier Principal (GPX)
+*   Allez sur [Geocaching.com > Pocket Queries](https://www.geocaching.com/pocket/).
+*   Dans l'onglet "My Finds", cliquez sur **Ajouter à la liste d'attente**.
+*   Téléchargez le fichier ZIP, extrayez le fichier `.gpx`, et chargez-le dans la zone **"1. DONNÉES PRINCIPALES"**.
+
+### 2. Lab Caches (TXT)
+*   Allez sur votre profil [Project-GC](https://project-gc.com/).
+*   Accédez à vos Lab Caches trouvées.
+*   Copiez tout le tableau (Ctrl+A / Ctrl+C) et collez-le (Ctrl+V) dans un fichier texte brut (`labs.txt`).
+*   Chargez-le dans l'outil.
+
+### 3. Outil FTF Oubliés (Hybride)
+*   **TXT Patron :** Exportez vos "My Finds Logs" depuis Project-GC.
+*   **GPX Zone :** Générez une Pocket Query englobant vos caches récentes pour avoir l'historique complet des logs concurrents.
+
+---
+
+## 🎨 Interface & Ergonomie
+*   **Mode Sombre / Clair :** Thème entièrement dynamique géré via CSS variables. Les graphiques et cartes s'adaptent instantanément.
+*   **Sauvegarde Locale :** Votre pseudo, domicile, réglages de thème et exclusions FTF sont mémorisés dans le `localStorage` de votre navigateur.
+*   **Design Responsive :** Interface propre, barres de défilement (scrollbars) personnalisées transparentes et fenêtres modales "pop-up" esthétiques.
+
+---
+
+## 💻 Technologies Utilisées
+
+*   **HTML5 / CSS3** (Vanilla, CSS Grid, Flexbox)
+*   **JavaScript (ES6+)** (Vanilla, DOMParser)
+*   **[Chart.js](https://www.chartjs.org/)** (Graphiques radar, barres, polaires)
+*   **[FullCalendar](https://fullcalendar.io/)** (Agenda interactif)
+*   **[Leaflet](https://leafletjs.com/)** (Cartographie interactive et tracés géo-spatiaux)
+
+---
+
+## 🔒 Confidentialité des données
+**100% de la puissance de calcul s'exécute dans votre navigateur.** L'application ne contient aucun script de tracking externe, et aucune coordonnée ni log de vos fichiers GPX n'est envoyée vers un serveur tiers.
+
+---
+*Fait avec passion pour la communauté Geocaching.* 🌍🔍
