@@ -221,7 +221,15 @@ body.dark-mode .kpi-card .sub-text { color: #cbd5e1; }
 .close-btn:hover { color: #ef4444; }
 #modalDate { color: var(--text-main); margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; text-transform: capitalize; font-weight: 800; font-size: 22px;}
 #modalTotal { font-size: 24px; font-weight: 900; color: var(--primary-dark); margin-bottom: 15px; display: flex; align-items:center; gap:10px;}
-.type-list { list-style: none; padding: 0; margin: 0; }
+/* Ajout d'un ascenseur (scroll) pour les très longues listes dans la popup */
+.type-list { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+    max-height: 350px;       
+    overflow-y: auto;        
+    padding-right: 10px;     
+}
 .type-list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid #f1f5f9; font-size: 15px; font-weight: 600; color: #475569;}
 #calendar { min-height: 600px; background: white; padding: 15px; border-radius: 16px; border: 1px solid #f1f5f9;}
 
@@ -722,11 +730,7 @@ body.dark-mode .geo-chip {
 }
 body.dark-mode .map-legend { color: #94a3b8; }
 
-/* ---- SCROLLBAR fine partout ---- */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
 
 /* ---- TEXTES DARK MODE ---- */
 body.dark-mode .geo-world-grid h4 { color: var(--secondary, #34d399); }
@@ -868,50 +872,98 @@ body.dark-mode .main-tab-btn.active { background: var(--primary); color: white; 
 .calendar-search button { background: var(--primary); color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
 .calendar-search button:hover { background: var(--primary-dark); }
 
-/* Boutons de navigation FullCalendar (Thème Clair) */
+/* =========================================
+   BOUTONS DE NAVIGATION FULLCALENDAR
+   ========================================= */
+
+/* --- Thème Clair --- */
 .fc .fc-button-primary {
-    background-color: #e2e8f0 !important;
-    border-color: #cbd5e1 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
     color: #475569 !important;
-    font-weight: bold !important;
+    font-weight: 800 !important;
     text-transform: capitalize !important;
-    box-shadow: none !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important; /* Vraie ombre de bouton */
+    transition: all 0.2s !important;
 }
 .fc .fc-button-primary:not(:disabled):hover {
-    background-color: #cbd5e1 !important;
-    color: #1e293b !important;
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+    transform: translateY(-1px); /* Petit effet de soulèvement au survol */
 }
 .fc .fc-button-primary:not(:disabled):active,
 .fc .fc-button-primary:not(:disabled).fc-button-active {
     background-color: var(--primary) !important;
     border-color: var(--primary-dark) !important;
     color: white !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important; /* Effet "enfoncé" quand actif */
 }
 
-/* =========================================
-   ADAPTATION THÈME SOMBRE (DARK MODE)
-   ========================================= */
+/* --- Thème Sombre --- */
 body.dark-mode .calendar-search { background: #0f172a; border-color: #334155; }
 body.dark-mode .calendar-search label { color: #94a3b8; }
 body.dark-mode .calendar-search input { 
-    background: #1e293b; 
-    color: white; 
-    border-color: #475569; 
-    color-scheme: dark; /* Magie : rend la petite icône calendrier blanche ! */
+    background: #1e293b; color: white; border-color: #475569; color-scheme: dark; 
 }
 
 body.dark-mode .fc .fc-button-primary {
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-    color: #94a3b8 !important;
+    background-color: #334155 !important; /* Gris bleuté qui ressort bien sur le fond #1e293b */
+    border: 1px solid #475569 !important;
+    color: #f8fafc !important; /* Texte très blanc */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3) !important;
 }
 body.dark-mode .fc .fc-button-primary:not(:disabled):hover {
-    background-color: #334155 !important;
-    color: #f1f5f9 !important;
+    background-color: #475569 !important;
+    color: #ffffff !important;
+    border-color: #94a3b8 !important;
 }
 body.dark-mode .fc .fc-button-primary:not(:disabled):active,
 body.dark-mode .fc .fc-button-primary:not(:disabled).fc-button-active {
     background-color: var(--primary) !important;
     border-color: var(--primary-dark) !important;
     color: white !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4) !important;
+}
+
+/* Couleur des trous du Challenge Jasmer */
+.jasmer-missing { background-color: #fee2e2; border: 1px solid #fca5a5 !important; cursor: help; }
+body.dark-mode .jasmer-missing { background-color: rgba(239, 68, 68, 0.15) !important; border-color: #7f1d1d !important; }
+
+/* =========================================
+   SCROLLBARS GLOBALES (MODERNES ET TRANSPARENTES)
+   ========================================= */
+
+/* 1. Rendu Firefox (S'applique à tous les éléments) */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+body.dark-mode * {
+    scrollbar-color: #475569 transparent;
+}
+
+/* 2. Rendu Chrome, Edge, Safari */
+::-webkit-scrollbar { 
+    width: 8px;  /* Barre Verticale */
+    height: 8px; /* Barre Horizontale (ex: Tableaux) */
+}
+::-webkit-scrollbar-track { 
+    background: transparent !important; 
+}
+::-webkit-scrollbar-thumb { 
+    background: #cbd5e1; 
+    border-radius: 10px; 
+}
+::-webkit-scrollbar-thumb:hover { 
+    background: #94a3b8; 
+}
+
+/* 3. Adaptation parfaite pour le Mode Sombre (Chrome, Edge, Safari) */
+body.dark-mode ::-webkit-scrollbar-thumb { 
+    background: #475569; 
+}
+body.dark-mode ::-webkit-scrollbar-thumb:hover { 
+    background: #64748b; 
 }

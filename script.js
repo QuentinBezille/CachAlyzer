@@ -29,14 +29,14 @@ window.onload = function() {
     let lastTab = null;
     try {
         lastTab = localStorage.getItem('mainTab_actif');
-        if (lastTab && MAIN_TABS.includes(lastTab)) {
+        if (lastTab && MAIN_TABS.includes(lastTab) && document.getElementById('panel-' + lastTab)) {
             MAIN_TABS.forEach(id => {
                 const panel = document.getElementById('panel-' + id);
                 if (panel) panel.style.display = (id === lastTab) ? 'block' : 'none';
             });
-            document.querySelectorAll('.main-tab-btn').forEach((btn, idx) => {
-                btn.classList.toggle('active', MAIN_TABS[idx] === lastTab);
-            });
+            activerMainTabBtn(lastTab);
+        } else {
+            lastTab = null; // onglet inconnu/supprimé : on reste sur la Vue d'ensemble
         }
     } catch (e) {}
 
@@ -355,6 +355,12 @@ function traiterGPX(xmlString, isDraft = false) {
             const gcCode = wpt.getElementsByTagNameNS("*", "name")[0]?.textContent || "";
             const lat = parseFloat(wpt.getAttribute("lat"));
             const lon = parseFloat(wpt.getAttribute("lon"));
+            // NOUVEAU : Récupération de la date de pose de la cache pour le Jasmer
+            const placedDateRaw = wpt.getElementsByTagNameNS("*", "time")[0]?.textContent;
+            let placedMonth = null;
+            if (placedDateRaw && placedDateRaw.length >= 7) {
+                placedMonth = placedDateRaw.substring(0, 7); // Format "YYYY-MM"
+            }
 
             // FALLBACK GÉOGRAPHIQUE : Geocaching.com laisse souvent le champ "state/province" vide
             // dans le GPX. Quand c'est le cas (France/Belgique uniquement pour l'instant), on devine
@@ -506,6 +512,20 @@ function traiterGPX(xmlString, isDraft = false) {
 
             // Assemblage
             if (countLogTrouve > 0) {
+
+                // NOUVEAU : Ajout de la trouvaille dans le calendrier Jasmer AVEC DÉTAILS
+                if (placedMonth && countLogTrouve > 0) {
+                    if (!tGpx.jasmer) tGpx.jasmer = {};
+                    if (!tGpx.jasmer[placedMonth]) tGpx.jasmer[placedMonth] = { count: 0, caches: [] };
+                    
+                    tGpx.jasmer[placedMonth].count += countLogTrouve;
+                    tGpx.jasmer[placedMonth].caches.push({
+                        gcCode: gcCode,
+                        name: cacheName,
+                        type: type
+                    });
+                }
+
                 tGpx.count += countLogTrouve;
                 
 
@@ -715,7 +735,7 @@ function compilerEtAfficher() {
         alert("⚠️ Dashboard en attente :\nVeuillez remplir votre Pseudo et vos Coordonnées Domicile dans le panneau de contrôle pour démarrer.");
         return;
     }
-    let fs = { totaux: { physiques: 0, labs: 0, global: 0 }, types: {}, sizes: {}, dt: {}, days: {}, geo: [], ftfList: [], missedFtfList: [], allFinds: [], locations: {} };
+    let fs = { totaux: { physiques: 0, labs: 0, global: 0 }, types: {}, sizes: {}, dt: {}, days: {}, geo: [], ftfList: [], missedFtfList: [], allFinds: [], locations: {}, jasmer: {} };    
     
     let sources = [];
     if (gpxStats) sources.push(gpxStats);
@@ -762,6 +782,23 @@ function compilerEtAfficher() {
                 }
             }
         }
+
+        if (src.jasmer) {
+            for (let jm in src.jasmer) {
+                if (!fs.jasmer[jm]) fs.jasmer[jm] = { count: 0, caches: [] };
+                
+                let jmData = src.jasmer[jm];
+                // Sécurité si anciennes données en mémoire
+                if (typeof jmData === 'number') { 
+                    fs.jasmer[jm].count += jmData; 
+                } else {
+                    fs.jasmer[jm].count += jmData.count;
+                    fs.jasmer[jm].caches = fs.jasmer[jm].caches.concat(jmData.caches || []);
+                }
+            }
+        }
+        // Magie : on rend les données Jasmer accessibles à la fenêtre Popup
+        window.donneesJasmerGlobales = fs.jasmer;
         
         if (src.geo) fs.geo = fs.geo.concat(src.geo);
         if (src.ftfList) fs.ftfList = fs.ftfList.concat(src.ftfList);
@@ -839,6 +876,7 @@ function compilerEtAfficher() {
     genererGraphesTypes(fs);
     genererTop50(fs.days);
     genererAgenda(fs.days);
+    genererJasmer(fs.jasmer);
 
     // Cartes géo dynamiques
     window.lastLocationsData = fs.locations;
@@ -2506,7 +2544,7 @@ function filtrerTableauFtf() {
 
 // 🧭 NAVIGATION PRINCIPALE PAR ONGLETS (façon navigateur) : un seul panneau visible à la fois,
 // pour éviter d'avoir à tout scroller sur une page interminable.
-const MAIN_TABS = ['overview', 'calendar', 'matrix', 'maps', 'ftf', 'challenge360', 'tools'];
+const MAIN_TABS = ['overview', 'calendar', 'maps', 'ftf', 'challenge360', 'tools'];
 
 function isMainPanelVisible(tabId) {
     const panel = document.getElementById('panel-' + tabId);
@@ -3383,4 +3421,156 @@ function naviguerCalendrier() {
     if (typeof fullCalendarInstance !== 'undefined' && fullCalendarInstance) {
         fullCalendarInstance.gotoDate(inputDate);
     }
+}
+
+// =====================================================================
+// === MODULE CHALLENGE JASMER =========================================
+// =====================================================================
+function genererJasmer(jasmerData) {
+    const container = document.getElementById('jasmerContainer');
+    if (!container) return;
+
+    let currentYear = new Date().getFullYear();
+    let currentMonth = new Date().getMonth() + 1; // 1 à 12
+    
+    let totalMoisCibles = 0;
+    let moisCompletes = 0;
+
+    let html = '<table class="grid-366" style="margin: auto;"><tr><th style="position:sticky; left:0; z-index:2;">Année</th>';
+    for (let m = 0; m < 12; m++) html += `<th>${moisAbrev[m]}</th>`;
+    html += '<th class="total-cell">Total</th></tr>';
+
+    for (let y = 2000; y <= currentYear; y++) {
+        html += `<tr><th style="position:sticky; left:0; z-index:2;">${y}</th>`;
+        let rowTotal = 0;
+
+        for (let m = 1; m <= 12; m++) {
+            // Cases inactives : avant Mai 2000, ou dans le futur
+            if ((y === 2000 && m < 5) || (y === currentYear && m > currentMonth)) {
+                html += '<td class="invalid"></td>';
+            } else {
+                totalMoisCibles++;
+                let moisStr = `${y}-${String(m).padStart(2, '0')}`;
+                let jData = jasmerData[moisStr];
+                // Sécurité pour lire la nouvelle structure avec les détails
+                let count = jData ? (typeof jData === 'number' ? jData : jData.count) : 0;
+                rowTotal += count;
+                
+                if (count > 0) {
+                    moisCompletes++;
+                    let intensity = Math.min(0.3 + (count / 15), 1);
+                    // NOUVEAU : On ajoute l'action onclick pour ouvrir la popup !
+                    html += `<td class="found" style="background-color: rgba(2, 135, 77, ${intensity});" title="${moisNomsFull[m-1]} ${y} : ${count} caches" onclick="ouvrirModalJasmer('${moisStr}')">${count}</td>`;
+                } else {
+                    html += `<td class="jasmer-missing" title="Manquant : Cache posée en ${moisNomsFull[m-1]} ${y} à trouver !"></td>`;
+                }
+            }
+        }
+        html += `<td class="total-cell">${rowTotal}</td></tr>`;
+    }
+    html += '</table>';
+    container.innerHTML = html;
+
+    // Badges et textes
+    let pctJasmer = ((moisCompletes / totalMoisCibles) * 100).toFixed(1);
+    if (document.getElementById('jasmerBadge')) document.getElementById('jasmerBadge').innerText = `${moisCompletes}/${totalMoisCibles} (${pctJasmer}%)`;
+    if (document.getElementById('jasmerProgress')) document.getElementById('jasmerProgress').style.width = `${pctJasmer}%`;
+    
+    let manquants = totalMoisCibles - moisCompletes;
+    if (document.getElementById('jasmerText')) {
+        document.getElementById('jasmerText').innerHTML = manquants === 0 
+            ? `<span style="color:#059669;">🏆 Félicitations, vous avez complété le Challenge Jasmer !</span>` 
+            : `Il vous manque <strong style="color:#ef4444;">${manquants} mois de pose</strong> pour terminer le challenge.`;
+    }
+}
+
+// === MODAL DÉTAIL JASMER (AVEC ONGLETS DE FILTRAGE) ===
+window.currentJasmerCaches = []; // Variable globale pour stocker la liste active
+
+function ouvrirModalJasmer(moisStr) {
+    if (!window.donneesJasmerGlobales) return;
+    const data = window.donneesJasmerGlobales[moisStr];
+    if (!data || data.count === 0) return;
+
+    let parts = moisStr.split('-');
+    let moisNom = moisNomsFull[parseInt(parts[1]) - 1];
+    let annee = parts[0];
+
+    document.getElementById('modalDate').innerText = `🗓️ Caches posées en ${moisNom} ${annee}`;
+
+    if (data.caches && data.caches.length > 0) {
+        // 1. Anti-doublons
+        let uniqueCaches = [];
+        let seen = new Set();
+        data.caches.forEach(c => {
+            if (!seen.has(c.gcCode)) {
+                seen.add(c.gcCode);
+                uniqueCaches.push(c);
+            }
+        });
+
+        window.currentJasmerCaches = uniqueCaches;
+        
+        // 2. Compter le nombre de caches par type pour générer les onglets
+        let typesMap = {};
+        uniqueCaches.forEach(c => { typesMap[c.type] = (typesMap[c.type] || 0) + 1; });
+        let sortedTypes = Object.keys(typesMap).sort((a,b) => typesMap[b] - typesMap[a]);
+
+        // 3. Création de la barre d'onglets transparente (avec retour à la ligne auto)
+        let tabsHtml = `<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:15px; padding-bottom:8px;">`;
+        tabsHtml += `<button class="tab-btn active" onclick="filtrerJasmerModal('Tous', this)">Tous (${uniqueCaches.length})</button>`;
+        
+        sortedTypes.forEach(t => {
+            let color = gcColors[t] || gcColors["Autre"];
+            tabsHtml += `<button class="tab-btn" onclick="filtrerJasmerModal('${t}', this)" style="display:flex; align-items:center; gap:6px; white-space:nowrap;">
+                <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background-color:${color};"></span>
+                ${t} (${typesMap[t]})
+            </button>`;
+        });
+        tabsHtml += `</div>`;
+
+        // 4. On insère le tout dans l'en-tête de la modale
+        document.getElementById('modalTotal').innerHTML = `<div style="font-size:16px;">Trouvées : ${data.count}</div>` + tabsHtml;
+
+        // 5. On affiche la liste complète par défaut
+        filtrerJasmerModal('Tous');
+    } else {
+        document.getElementById('modalTotal').innerText = `Trouvées : ${data.count}`;
+        document.getElementById('modalTypesList').innerHTML = `<li style="color:#ef4444; font-weight:bold; justify-content:center; text-align:center; padding: 20px;">⚠️ Veuillez cliquer sur "Vider les données" et recharger votre GPX pour voir les détails !</li>`;
+    }
+
+    document.getElementById('dayModal').style.display = 'block';
+}
+
+// Fonction appelée quand tu cliques sur un onglet dans la fenêtre
+function filtrerJasmerModal(typeFiltre, btnElement = null) {
+    // Gérer la surbrillance visuelle de l'onglet actif
+    if (btnElement) {
+        let btns = btnElement.parentElement.querySelectorAll('.tab-btn');
+        btns.forEach(b => b.classList.remove('active'));
+        btnElement.classList.add('active');
+    }
+
+    // Filtrer la liste
+    let cachesToRender = typeFiltre === 'Tous' 
+        ? window.currentJasmerCaches 
+        : window.currentJasmerCaches.filter(c => c.type === typeFiltre);
+
+    // Générer le code HTML de la liste
+    let htmlList = '';
+    cachesToRender.forEach(cache => {
+        let color = gcColors[cache.type] || gcColors["Autre"];
+        let gcLink = (cache.gcCode && cache.gcCode !== "P-GC" && cache.gcCode !== "?") 
+            ? `<a href="https://coord.info/${cache.gcCode}" target="_blank" style="color:#3b82f6; text-decoration:none; font-weight:bold;">${cache.gcCode}</a>` 
+            : `<span style="color:#64748b; font-weight:bold;">${cache.gcCode || '?'}</span>`;
+            
+        htmlList += `<li style="display:flex; justify-content:flex-start; align-items:center; padding:10px 0; border-bottom:1px solid var(--border, #f1f5f9);">
+            <span style="display:inline-block; width:14px; height:14px; border-radius:50%; margin-right:15px; flex-shrink:0; background-color: ${color};" title="${cache.type}"></span>
+            <div style="text-align:left; line-height: 1.3;">
+                ${gcLink} <strong style="font-size:13px; margin-left:8px; color:var(--text-main);">${escHtml(cache.name)}</strong>
+            </div>
+        </li>`;
+    });
+
+    document.getElementById('modalTypesList').innerHTML = htmlList;
 }

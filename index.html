@@ -52,28 +52,36 @@
     </div>
 
     <div class="upload-section-wrapper">
+        <!-- ZONE 1 : CACHES (.gpx) -->
         <div class="upload-box" style="display:flex; flex-direction:column;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 style="margin:0;">1. DONNÉES PRINCIPALES</h3>
-                <button onclick="toggleAide('aideUploadPrincipal')" class="btn-aide">❓</button>
+                <button onclick="toggleAide('aideUploadCaches')" class="btn-aide">❓</button>
             </div>
-            <div id="aideUploadPrincipal" class="aide-box" style="display:none; text-align:left;">
-                <strong>🛠️ Comment obtenir ces fichiers ?</strong>
+            <div id="aideUploadCaches" class="aide-box" style="display:none; text-align:left;">
+                <strong>🛠️ Comment obtenir ce fichier ?</strong>
                 <ol>
                     <li><b>Caches (.gpx)</b> : sur Geocaching.com, va dans <i>/account/dashboard → Planifier → Pocket Query </i> dans la catégorie <i></i>"My Finds" </i>(Mes découvertes) → <i>Ajouter à la liste d'attente </i> → Télécharge le fichier .gpx puis charge-le ici.</li>
+                </ol>
+                <ol>
                     <li><b>Labs (.txt)</b> : sur ProjectGC, va sur Profil → Labcaches loguées → sur PC (ctrl + a) / ou sur téléphone tout sélectionner → colle le contenu dans un fichier .txt. comme ce que tu a copier ne modifier rien</li>
                 </ol>
             </div>
-            <div style="display:flex; gap:8px; margin-bottom:8px; margin-top:10px;">
+            <div style="display:flex; gap:8px; margin-top:10px;">
                 <div class="upload-btn" onclick="document.getElementById('gpxInput').click()" id="gpxBtn" style="flex:1; padding:14px;">📁 Caches (.gpx)</div>
                 <button class="btn-clear-small" onclick="clearSpecific('gpx')">🗑️</button>
             </div>
-            <div style="display:flex; gap:8px;">
+            
+            
+            <div style="display:flex; gap:8px; margin-top:10px;">
                 <div class="upload-btn" onclick="document.getElementById('csvInput').click()" id="csvBtn" style="flex:1; padding:14px;">📁 Labs (.txt)</div>
                 <button class="btn-clear-small" onclick="clearSpecific('labs')">🗑️</button>
             </div>
         </div>
 
+        
+
+        <!-- ZONE 3 : BROUILLONS (fusion .txt + .gpx) -->
         <div class="upload-box" style="border:2px dashed #3b82f6; display:flex; flex-direction:column;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 style="margin:0; color:#2563eb;">2. BROUILLONS (FUSION)</h3>
@@ -107,10 +115,8 @@
 <div class="main-tabs-bar" id="mainTabsBar">
     <button class="main-tab-btn active" onclick="switchMainTab('overview')">📊 Vue d'ensemble</button>
     <button class="main-tab-btn" onclick="switchMainTab('calendar')">🗓️ Calendrier</button>
-    <button class="main-tab-btn" onclick="switchMainTab('matrix')">🎯 Matrice &amp; Habitudes</button>
-    
+    <button class="main-tab-btn" onclick="switchMainTab('challenge360')">🎯 Challenges</button>
     <button class="main-tab-btn" onclick="switchMainTab('ftf')">🏆 FTF &amp; Paliers</button>
-    <button class="main-tab-btn" onclick="switchMainTab('challenge360')">🧭 Challenge 360</button>
     <button class="main-tab-btn" onclick="switchMainTab('tools')">🛠️ Outils</button>
 </div>
             
@@ -133,13 +139,16 @@
             <div class="kpi-card"><h4>🏆 Meilleure année</h4><div class="value" id="kpiBestYear">0</div><div class="sub-text" id="kpiBestYearDate">-</div></div>
         </div>
 
+        <!-- ======== ONGLET 1 : VUE D'ENSEMBLE (statistiques globales) ======== -->
         <div class="main-tab-panel" id="panel-overview">
 
+        <!-- Répartition annuelle -->
         <div class="card card-full">
             <div class="card-header"><h3>📈 Répartition annuelle</h3></div>
             <table class="annual-table" id="annualTable"></table>
         </div>
 
+        <!-- Évolution des découvertes -->
         <div class="card card-full">
             <div class="card-header">
                 <h3>📊 Évolution des découvertes</h3>
@@ -152,6 +161,7 @@
             <div class="chart-container" id="containerCumul" style="display:none;"><canvas id="cumulativeChart"></canvas></div>
         </div>
 
+        <!-- Détails des caches (types / tailles) -->
         <div class="card card-full">
             <div class="card-header">
                 <h3>📦 Détails des Caches</h3>
@@ -167,10 +177,25 @@
             </div>
         </div>
 
+        <!-- Habitudes de découverte (jours / mois) -->
+        <div class="card card-full">
+            <div class="card-header">
+                <h3>📊 Habitudes de découverte</h3>
+                <div class="tabs" onclick="event.stopPropagation()">
+                    <button class="tab-btn active" onclick="switchRadarTab('days')">Jours de la semaine</button>
+                    <button class="tab-btn" onclick="switchRadarTab('months')">Mois de l'année</button>
+                </div>
+            </div>
+            <div class="chart-container" id="containerRadarDays" style="height: 350px;"><canvas id="radarDaysChart"></canvas></div>
+            <div class="chart-container" id="containerRadarMonths" style="display:none; height: 350px;"><canvas id="radarMonthsChart"></canvas></div>
+        </div>
+
         </div><!-- /panel-overview -->
 
+        <!-- ======== ONGLET 2 : CALENDRIER (agenda + records de journées) ======== -->
         <div class="main-tab-panel" id="panel-calendar" style="display:none;">
 
+        <!-- Agenda des découvertes -->
         <div class="card card-full" id="calendar-container">
             <div class="card-header" style="display:flex; flex-wrap:wrap; gap:15px; align-items:center;">
                 <h3 style="margin-right:auto;">📅 Agenda des découvertes</h3>
@@ -184,7 +209,49 @@
             </div>
             <div id="calendar"></div>
         </div>
+
+        <!-- Tableau d'honneur : Top 50 des journées -->
+        <div class="card card-full">
+            <div class="card-header"><h3>🏆 Tableau d'Honneur : Top 50 des journées</h3></div>
+            <div class="days-grid" id="daysGrid"></div>
+
         
+        </div>
+
+        </div><!-- /panel-calendar -->
+
+        <!-- ======== ONGLET 3 : CHALLENGES (grilles à compléter) ======== -->
+        <div class="main-tab-panel" id="panel-challenge360" style="display:none;">
+
+        <!-- Matrice Difficulté / Terrain (Fizzy 81) -->
+        <div class="card card-full">
+            <div class="card-header">
+                <h3>🎯 Matrice Difficulté / Terrain (Physiques)</h3>
+                <div style="display:flex; align-items:center; gap:10px; margin-left:auto;" onclick="event.stopPropagation()">
+                    <div class="card-badge" id="fizzyBadge">0/81</div>
+                    <button onclick="toggleAide('aideMatriceDT')" class="btn-aide">❓ Aide</button>
+                </div>
+            </div>
+            <div id="aideMatriceDT" class="aide-box" style="display:none;">
+                <strong>🛠️ Comment lire cette matrice ?</strong>
+                <ol>
+                    <li>Chaque case croise une <b>Difficulté</b> (lignes) et un <b>Terrain</b> (colonnes), de 1 à 5 par pas de 0,5 — soit 81 combinaisons possibles.</li>
+                    <li>Le chiffre dans la case = nombre de caches physiques trouvées avec cette combinaison D/T exacte. Plus la case est foncée, plus tu en as trouvé.</li>
+                    <li><b>Clique sur une case</b> pour voir le détail des types de caches correspondant à cette combinaison.</li>
+                    <li>Cette matrice se construit à partir du fichier <b>Caches (.gpx)</b> chargé en haut de page (zone "1. Caches").</li>
+                </ol>
+            </div>
+            <div class="dt-header" style="justify-content: center; gap:30px; margin-bottom: 5px;">
+                <span id="dtMoyD" style="color:var(--primary-dark);">Difficulté Moyenne: 0.00</span>
+                <span id="dtMoyT" style="color:var(--primary-dark);">Terrain Moyen: 0.00</span>
+            </div>
+            <div class="progress-container"><div class="progress-bar" id="fizzyProgress" style="width: 0%;"></div></div>
+            <div class="table-responsive">
+                <table class="dt-matrix" id="dtTable"></table>
+            </div>
+        </div>
+
+        <!-- Calendrier des 366 jours -->
         <div class="card card-full">
             <div class="card-header">
                 <h3>🗓️ Calendrier des 366 Jours</h3>
@@ -206,9 +273,32 @@
             <div class="progress-container"><div class="progress-bar" id="jours366Progress" style="width: 0%;"></div></div>
             <div class="grid-366-wrapper" id="grid366Container"></div>
         </div>
-        </div><!-- /panel-calendar -->
 
-        <div class="main-tab-panel" id="panel-challenge360" style="display:none;">
+        <!-- Challenge Jasmer -->
+        <div class="card card-full">
+            <div class="card-header">
+                <h3>🗓️ Challenge Jasmer</h3>
+                <div style="display:flex; align-items:center; gap:10px; margin-left:auto;" onclick="event.stopPropagation()">
+                    <div class="card-badge" id="jasmerBadge">0/0</div>
+                    <button onclick="toggleAide('aideJasmer')" class="btn-aide">❓ Aide</button>
+                </div>
+            </div>
+            <div id="aideJasmer" class="aide-box" style="display:none;">
+                <strong>🛠️ Comment lire la grille Jasmer ?</strong>
+                <ol>
+                    <li>L'objectif est de trouver au moins une cache posée (cachée) lors de chaque mois depuis mai 2000 (date de création de Geocaching).</li>
+                    <li>Chaque ligne représente une année, chaque colonne un mois de pose.</li>
+                    <li>Les cases <b>vertes</b> indiquent que vous avez trouvé au moins une cache posée à ce mois-là. Les cases <b>rouges</b> sont vos "trous" historiques à combler !</li>
+                </ol>
+            </div>
+            <div id="jasmerText" style="margin-bottom: 10px; font-size: 13px; font-weight: 600; color: var(--text-muted); text-align: center;"></div>
+            <div class="progress-container"><div class="progress-bar" id="jasmerProgress" style="width: 0%;"></div></div>
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <div id="jasmerContainer" style="width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Challenge 360° -->
             <div class="card card-full">
             <div class="card-header">
                 <h3>🧭 Challenge 360 Degrés (Premium)</h3>
@@ -226,7 +316,7 @@
                 <strong>🛠️ Comprendre le Challenge 360°</strong>
                 <ol>
                     <li>Renseigne ton <b>Domicile</b> en haut de page (coordonnées GPS) : c'est le centre à partir duquel les 360 secteurs (1 par degré d'azimut) sont calculés.</li>
-                    <li>Charge ton fichier <b>Caches (.gpx)</b> (section "1. Données principales") : chaque cache trouvée est classée dans le secteur correspondant à sa direction par rapport à ton domicile.</li>
+                    <li>Charge ton fichier <b>Caches (.gpx)</b> (zone "1. Caches") : chaque cache trouvée est classée dans le secteur correspondant à sa direction par rapport à ton domicile.</li>
                     <li>Utilise le curseur "Objectif" pour définir combien de caches minimum tu veux par secteur (1 à 15) pour le considérer comme "complété".</li>
                     <li>L'onglet <b>Carte Sectorielle</b> affiche visuellement les caches d'un secteur donné ; coche "Tout voir" pour les afficher tous en même temps (zoom minimum requis).</li>
                 </ol>
@@ -285,8 +375,10 @@
                 </div>
             </div>
         </div>
+
         </div><!-- /panel-challenge360 -->
 
+        <!-- ======== ONGLET 4 : FTF & PALIERS ======== -->
         <div class="main-tab-panel" id="panel-ftf" style="display:none;">
             <div class="card card-full">
             <div class="card-header">
@@ -525,49 +617,10 @@
         </div>
         </div><!-- /panel-ftf -->
 
-        <div class="main-tab-panel" id="panel-matrix" style="display:none;">
-        <div class="card card-full">
-            <div class="card-header">
-                <h3>🎯 Matrice Difficulté / Terrain (Physiques)</h3>
-                <div style="display:flex; align-items:center; gap:10px; margin-left:auto;" onclick="event.stopPropagation()">
-                    <div class="card-badge" id="fizzyBadge">0/81</div>
-                    <button onclick="toggleAide('aideMatriceDT')" class="btn-aide">❓ Aide</button>
-                </div>
-            </div>
-            <div id="aideMatriceDT" class="aide-box" style="display:none;">
-                <strong>🛠️ Comment lire cette matrice ?</strong>
-                <ol>
-                    <li>Chaque case croise une <b>Difficulté</b> (lignes) et un <b>Terrain</b> (colonnes), de 1 à 5 par pas de 0,5 — soit 81 combinaisons possibles.</li>
-                    <li>Le chiffre dans la case = nombre de caches physiques trouvées avec cette combinaison D/T exacte. Plus la case est foncée, plus tu en as trouvé.</li>
-                    <li><b>Clique sur une case</b> pour voir le détail des types de caches correspondant à cette combinaison.</li>
-                    <li>Cette matrice se construit à partir du fichier <b>Caches (.gpx)</b> chargé en haut de page (section "1. Données principales").</li>
-                </ol>
-            </div>
-            <div class="dt-header" style="justify-content: center; gap:30px; margin-bottom: 5px;">
-                <span id="dtMoyD" style="color:var(--primary-dark);">Difficulté Moyenne: 0.00</span>
-                <span id="dtMoyT" style="color:var(--primary-dark);">Terrain Moyen: 0.00</span>
-            </div>
-            <div class="progress-container"><div class="progress-bar" id="fizzyProgress" style="width: 0%;"></div></div>
-            <div class="table-responsive">
-                <table class="dt-matrix" id="dtTable"></table>
-            </div>
-        </div>
-
-        <div class="card card-full">
-            <div class="card-header">
-                <h3>📊 Habitudes de découverte</h3>
-                <div class="tabs" onclick="event.stopPropagation()">
-                    <button class="tab-btn active" onclick="switchRadarTab('days')">Jours de la semaine</button>
-                    <button class="tab-btn" onclick="switchRadarTab('months')">Mois de l'année</button>
-                </div>
-            </div>
-            <div class="chart-container" id="containerRadarDays" style="height: 350px;"><canvas id="radarDaysChart"></canvas></div>
-            <div class="chart-container" id="containerRadarMonths" style="display:none; height: 350px;"><canvas id="radarMonthsChart"></canvas></div>
-        </div>
-        </div><!-- /panel-matrix -->
-
-
+        <!-- ======== ONGLET 5 : OUTILS ======== -->
         <div class="main-tab-panel" id="panel-tools" style="display:none;">
+
+        <!-- Créateur de Checker Project-GC & Badge -->
         <div class="card card-full" id="module-generateur">
     <div class="card-header">
         <h3>🛠️ Créateur de Checker Project-GC & Badge</h3>
@@ -679,10 +732,7 @@
         </div>
     </div>
         </div><!-- fermeture manquante de #module-generateur (bug pré-existant corrigé) -->
-        <div class="card card-full">
-            <div class="card-header"><h3>🏆 Tableau d'Honneur : Top 50 des journées</h3></div>
-            <div class="days-grid" id="daysGrid"></div>
-        </div>
+
         </div><!-- /panel-tools -->
     </div>
 </div>
