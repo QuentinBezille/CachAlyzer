@@ -233,6 +233,30 @@ body.dark-mode .kpi-card .sub-text { color: #cbd5e1; }
 .type-list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid #f1f5f9; font-size: 15px; font-weight: 600; color: #475569;}
 #calendar { min-height: 600px; background: white; padding: 15px; border-radius: 16px; border: 1px solid #f1f5f9;}
 
+/* POPUP CARTE DU DOMICILE */
+.modal-content-map { max-width: 900px; margin: 4% auto; padding: 22px 24px; }
+.home-map-title { margin: 0 0 4px; color: var(--text-main); font-weight: 800; font-size: 20px; }
+#homeMapView { height: 55vh; min-height: 320px; width: 100%; margin-top: 10px; border-radius: 12px; border: 1px solid #e2e8f0; }
+.home-map-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+#homeMapCoords { font-family: monospace; font-weight: 700; color: var(--text-main); }
+.home-map-actions { display: flex; gap: 10px; }
+.btn-home-map-cancel, .btn-home-map-ok { border: none; border-radius: 8px; padding: 10px 18px; font-weight: 700; cursor: pointer; }
+.btn-home-map-cancel { background: #e2e8f0; color: #475569; }
+.btn-home-map-ok { background: var(--primary); color: white; }
+.btn-home-map-ok:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Popup domicile en mode sombre : carte, contrôles Leaflet (Satellite/Plan, zoom, crédits) et boutons */
+body.dark-mode #homeMapView { border-color: #334155; }
+body.dark-mode #homeMapView .leaflet-control-layers,
+body.dark-mode #homeMapView .leaflet-bar,
+body.dark-mode #homeMapView .leaflet-bar a { background: #1e293b !important; border-color: #475569 !important; color: #f1f5f9 !important; }
+body.dark-mode #homeMapView .leaflet-bar a:hover { background: #334155 !important; }
+body.dark-mode #homeMapView .leaflet-control-layers label { color: #f1f5f9 !important; }
+body.dark-mode #homeMapView .leaflet-control-layers-selector { accent-color: var(--primary); }
+body.dark-mode #homeMapView .leaflet-control-attribution { background: rgba(30, 41, 59, 0.85) !important; color: #cbd5e1 !important; }
+body.dark-mode #homeMapView .leaflet-control-attribution a { color: #93c5fd !important; }
+body.dark-mode .btn-home-map-cancel { background: #334155; color: #e2e8f0; }
+
 /* NOUVEAUTÉS FTF & MAP & 360 */
 .btn-map { background: #f59e0b; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; align-self: flex-start; margin-top:10px;}
 .btn-map:hover { background: #d97706; }
@@ -987,7 +1011,7 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
     padding: 2px 10px;
     font-weight: 900;
     font-size: 14px;
-    cursor: help;
+    cursor: pointer;
     transition: all 0.2s;
 }
 .btn-help-hover:hover {
@@ -1022,10 +1046,25 @@ body.dark-mode ::-webkit-scrollbar-thumb:hover {
 }
 
 /* L'action : Quand on survole le parent, la fenêtre apparaît */
-.popup-wrapper:hover .popup-content {
+.popup-wrapper:hover .popup-content,
+.popup-wrapper.pinned .popup-content {
     visibility: visible;
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+}
+
+/* Épinglé par un clic : reste affiché, et on peut défiler / sélectionner le texte dedans */
+.popup-wrapper.pinned .popup-content {
+    pointer-events: auto;
+}
+.popup-wrapper.pinned .btn-help-hover {
+    box-shadow: 0 0 0 2px #f59e0b;
+}
+
+/* Second clic sur le bouton : on referme, même si la souris est encore dessus */
+.popup-wrapper.force-closed .popup-content {
+    visibility: hidden;
+    opacity: 0;
 }
 
 /* Formatage du texte à l'intérieur de l'aide */

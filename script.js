@@ -68,37 +68,8 @@ window.onload = function() {
     }
     if (gpxStats || labStats) compilerEtAfficher();
 
-    // Gestion de la carte Leaflet
-    document.getElementById('btnToggleMap').addEventListener('click', () => {
-        const mapDiv = document.getElementById('mapContainer');
-        if (mapDiv.style.display === 'none') {
-            mapDiv.style.display = 'block';
-            let coordsObj = parseGeocachingCoords(document.getElementById('homeCoords').value);
-            let lat = coordsObj.lat;
-            let lon = coordsObj.lon;
-
-            if (!leafletMap) {
-                leafletMap = L.map('mapContainer').setView([lat, lon], 10);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(leafletMap);
-                marker = L.marker([lat, lon]).addTo(leafletMap);
-                
-                leafletMap.on('click', function(e) {
-                    marker.setLatLng(e.latlng);
-                    // Remplissage automatique de la case au format Geocaching
-                    let coordsInput = document.getElementById('homeCoords');
-                    coordsInput.value = formatGeocachingCoords(e.latlng.lat, e.latlng.lng);
-                    // Force la sauvegarde et la mise à jour immédiate du 360 !
-                    coordsInput.dispatchEvent(new Event('input')); 
-                });
-                
-            } else {
-                leafletMap.setView([lat, lon], 10);
-                marker.setLatLng([lat, lon]);
-            }
-        } else {
-            mapDiv.style.display = 'none';
-        }
-    });
+    // Gestion de la carte du domicile (popup)
+    document.getElementById('btnToggleMap').addEventListener('click', ouvrirHomeMap);
     // Rendre toutes les cartes rétractables au clic sur le titre
     document.querySelectorAll('.card-header').forEach(header => {
         header.addEventListener('click', () => {
@@ -321,6 +292,68 @@ function formatGeocachingCoords(lat, lon) {
     };
     return `${formatDDM(lat, true)} ${formatDDM(lon, false)}`;
 }
+
+// === POPUP CARTE DU DOMICILE (vue satellite par défaut, bascule vers le plan) ===
+let homeMapPending = null; // point cliqué mais pas encore validé : { lat, lon }
+
+function majHomeMapCoords() {
+    const el = document.getElementById('homeMapCoords');
+    if (homeMapPending) el.textContent = formatGeocachingCoords(homeMapPending.lat, homeMapPending.lon);
+    else el.textContent = document.getElementById('homeCoords').value.trim() || 'Aucun point choisi';
+}
+
+function ouvrirHomeMap() {
+    document.getElementById('homeMapModal').style.display = 'block';
+    const input = document.getElementById('homeCoords');
+    const hasValue = input.value.trim() !== '';
+    const c = parseGeocachingCoords(input.value);
+    homeMapPending = null;
+    document.getElementById('btnHomeMapValider').disabled = true;
+
+    if (!leafletMap) {
+        leafletMap = L.map('homeMapView');
+        const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', maxZoom: 19 });
+        const plan = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap', maxZoom: 19 });
+        satellite.addTo(leafletMap);
+        L.control.layers({ '🛰️ Satellite': satellite, '🗺️ Plan': plan }, null, { collapsed: false }).addTo(leafletMap);
+
+        leafletMap.on('click', function (e) {
+            if (!marker) marker = L.marker(e.latlng);
+            marker.setLatLng(e.latlng).addTo(leafletMap);
+            homeMapPending = { lat: e.latlng.lat, lon: e.latlng.lng };
+            document.getElementById('btnHomeMapValider').disabled = false;
+            majHomeMapCoords();
+        });
+    }
+
+    leafletMap.setView([c.lat, c.lon], hasValue ? 13 : 10);
+    if (hasValue) {
+        if (!marker) marker = L.marker([c.lat, c.lon]);
+        marker.setLatLng([c.lat, c.lon]).addTo(leafletMap);
+    } else if (marker) {
+        marker.remove();
+    }
+    majHomeMapCoords();
+    // La carte était dans un conteneur caché : on recalcule sa taille une fois la popup visible
+    setTimeout(() => leafletMap.invalidateSize(), 0);
+}
+
+function validerHomeMap() {
+    if (homeMapPending) {
+        const input = document.getElementById('homeCoords');
+        input.value = formatGeocachingCoords(homeMapPending.lat, homeMapPending.lon);
+        // Force la sauvegarde et la mise à jour immédiate du 360 !
+        input.dispatchEvent(new Event('input'));
+    }
+    fermerHomeMap();
+}
+
+function fermerHomeMap() { document.getElementById('homeMapModal').style.display = 'none'; }
+
+document.getElementById('homeMapModal').addEventListener('click', e => {
+    if (e.target.id === 'homeMapModal') fermerHomeMap(); // clic sur le fond sombre
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerHomeMap(); });
 
 // === MOTEUR D'EXTRACTION TOTALEMENT SÉCURISÉ (GPX & BROUILLONS) ===
 function traiterGPX(xmlString, isDraft = false) {
@@ -2669,6 +2702,7 @@ function convertirAidesEnPopups() {
         btn.parentNode.insertBefore(wrapper, btn);
         wrapper.appendChild(btn);
         wrapper.appendChild(content);
+        wrapper.dataset.posInit = '1';
         // Empêche un clic sur l'aide de replier la carte (.card-header cliquable)
         wrapper.addEventListener('click', e => e.stopPropagation());
         // Repositionne à l'ouverture (survol PC, tap / focus téléphone)
@@ -2678,15 +2712,58 @@ function convertirAidesEnPopups() {
 }
 function repositionnerPopupsOuverts() {
     document.querySelectorAll('.popup-wrapper').forEach(w => {
-        if (w.matches(':hover') || w.matches(':focus-within')) positionnerPopupAide(w);
+        if (w.matches(':hover') || w.matches(':focus-within') || w.classList.contains('pinned')) positionnerPopupAide(w);
     });
 }
 window.addEventListener('resize', repositionnerPopupsOuverts);
 window.addEventListener('scroll', repositionnerPopupsOuverts, true);
+
+// 📌 SURVOL = aperçu, CLIC = le popup reste affiché (épinglé)
+// - clic sur le bouton : épingle le popup (il reste ouvert même quand la souris part)
+// - re-clic sur le bouton : le referme
+// - clic ailleurs ou touche Échap : ferme tous les popups épinglés
+// Écouteur en phase de capture, car les wrappers font stopPropagation() sur leurs clics.
+function fermerPopupsEpingles(sauf) {
+    document.querySelectorAll('.popup-wrapper.pinned').forEach(w => { if (w !== sauf) w.classList.remove('pinned'); });
+}
+document.addEventListener('click', function (e) {
+    const wrapper = e.target.closest('.popup-wrapper');
+    if (!wrapper) { fermerPopupsEpingles(null); return; }
+    if (!e.target.closest('.btn-help-hover')) return; // clic dans le contenu du popup : on ne fait rien
+    fermerPopupsEpingles(wrapper);
+    if (wrapper.classList.contains('pinned')) {
+        wrapper.classList.remove('pinned');
+        wrapper.classList.add('force-closed'); // sinon il resterait visible tant que la souris est dessus
+    } else {
+        wrapper.classList.remove('force-closed');
+        wrapper.classList.add('pinned');
+        positionnerPopupAide(wrapper);
+        requestAnimationFrame(() => positionnerPopupAide(wrapper));
+    }
+}, true);
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') fermerPopupsEpingles(null);
+});
+function initialiserPopupsEpingles() {
+    document.querySelectorAll('.popup-wrapper').forEach(w => {
+        w.addEventListener('mouseleave', () => w.classList.remove('force-closed'));
+        // Popups écrits directement dans le HTML (ex : 💻) : on leur donne le même positionnement que les ❓
+        if (!w.dataset.posInit) {
+            w.dataset.posInit = '1';
+            const repo = () => { positionnerPopupAide(w); requestAnimationFrame(() => positionnerPopupAide(w)); };
+            ['mouseenter', 'focusin', 'touchstart'].forEach(ev => w.addEventListener(ev, repo, { passive: true }));
+        }
+    });
+}
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', convertirAidesEnPopups);
 } else {
     convertirAidesEnPopups();
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialiserPopupsEpingles);
+} else {
+    initialiserPopupsEpingles();
 }
 
 // 🗑️ GESTION DE LA SUPPRESSION D'UN FTF AVEC SA PROPRE FENÊTRE

@@ -62,7 +62,6 @@
                 <button id="btnToggleMap" class="btn-map">🗺️</button>
             </div>
         </div>
-        <div id="mapContainer" style="display:none; height: 150px; width: 100%;"></div>
     </div>
 
     <div class="upload-section-wrapper">
@@ -757,6 +756,23 @@
         <h2 id="modalDate">Détails</h2>
         <div id="modalTotal"></div>
         <ul id="modalTypesList" class="type-list"></ul>
+    </div>
+</div>
+
+<!-- POPUP CARTE DU DOMICILE (vue satellite / plan) -->
+<div id="homeMapModal" class="modal">
+    <div class="modal-content modal-content-map">
+        <span class="close-btn" onclick="fermerHomeMap()">&times;</span>
+        <h2 class="home-map-title">📍 Choisir mon domicile</h2>
+        <p class="note" style="margin:0;">Clique sur la carte pour placer ton domicile, puis valide.</p>
+        <div id="homeMapView"></div>
+        <div class="home-map-footer">
+            <span id="homeMapCoords">—</span>
+            <div class="home-map-actions">
+                <button type="button" class="btn-home-map-cancel" onclick="fermerHomeMap()">Annuler</button>
+                <button type="button" class="btn-home-map-ok" id="btnHomeMapValider" onclick="validerHomeMap()" disabled>✅ Valider</button>
+            </div>
+        </div>
     </div>
 </div>
 
