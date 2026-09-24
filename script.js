@@ -2603,6 +2603,92 @@ function toggleAide(id) {
     box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
 }
 
+// 💡 NOUVELLE MÉTHODE DES BOUTONS D'AIDE : au lieu d'une boîte qui s'ouvre au clic (toggleAide),
+// chaque bouton ❓ devient un popup-wrapper > btn-help-hover + popup-content (affichage au survol).
+// Le contenu de l'ancienne .aide-box est simplement déplacé dans le .popup-content.
+// Garde le popup d'aide TOUJOURS dans la fenêtre (PC et téléphone) :
+// position fixe recalculée à l'ouverture, décalée / retournée si besoin, avec défilement interne si trop haut.
+function positionnerPopupAide(wrapper) {
+    const btn = wrapper.querySelector('.btn-help-hover');
+    const pop = wrapper.querySelector('.popup-content');
+    if (!btn || !pop) return;
+    const M = 8; // marge minimale avec les bords de l'écran
+    const vw = document.documentElement.clientWidth;
+    const vh = document.documentElement.clientHeight;
+
+    pop.style.position = 'fixed';
+    pop.style.right = 'auto';
+    pop.style.bottom = 'auto';
+    pop.style.margin = '0';
+    pop.style.transform = 'none';
+    pop.style.boxSizing = 'border-box';
+    pop.style.maxWidth = (vw - 2 * M) + 'px';
+    pop.style.maxHeight = (vh - 2 * M) + 'px';
+    pop.style.overflowY = 'auto';
+    pop.style.left = M + 'px';
+    pop.style.top = M + 'px';
+
+    const w = pop.offsetWidth, h = pop.offsetHeight;
+    if (!w || !h) return; // popup pas encore affiché
+
+    const r = btn.getBoundingClientRect();
+    // Horizontal : aligné sur le bouton, puis ramené dans l'écran
+    let left = Math.min(Math.max(M, r.left), vw - w - M);
+    left = Math.max(M, left);
+    // Vertical : sous le bouton (collé, pour garder le survol), sinon au-dessus, sinon centré dans l'écran
+    let top = r.bottom;
+    if (top + h > vh - M) {
+        top = r.top - h;
+        if (top < M) top = Math.max(M, vh - h - M);
+    }
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+}
+
+function convertirAidesEnPopups() {
+    document.querySelectorAll('button.btn-aide').forEach(btn => {
+        if (btn.closest('.popup-wrapper')) return; // déjà converti
+        const m = (btn.getAttribute('onclick') || '').match(/toggleAide\(\s*'([^']+)'\s*\)/);
+        if (!m) return;
+        const box = document.getElementById(m[1]);
+        if (!box) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'popup-wrapper';
+        const content = document.createElement('div');
+        content.className = 'popup-content';
+        if (box.style.textAlign) content.style.textAlign = box.style.textAlign;
+
+        while (box.firstChild) content.appendChild(box.firstChild);
+        const boxId = box.id;
+        box.remove();
+        content.id = boxId;
+
+        btn.className = 'btn-help-hover';
+        btn.removeAttribute('onclick');
+        btn.parentNode.insertBefore(wrapper, btn);
+        wrapper.appendChild(btn);
+        wrapper.appendChild(content);
+        // Empêche un clic sur l'aide de replier la carte (.card-header cliquable)
+        wrapper.addEventListener('click', e => e.stopPropagation());
+        // Repositionne à l'ouverture (survol PC, tap / focus téléphone)
+        const repositionner = () => { positionnerPopupAide(wrapper); requestAnimationFrame(() => positionnerPopupAide(wrapper)); };
+        ['mouseenter', 'focusin', 'click', 'touchstart'].forEach(ev => wrapper.addEventListener(ev, repositionner, { passive: true }));
+    });
+}
+function repositionnerPopupsOuverts() {
+    document.querySelectorAll('.popup-wrapper').forEach(w => {
+        if (w.matches(':hover') || w.matches(':focus-within')) positionnerPopupAide(w);
+    });
+}
+window.addEventListener('resize', repositionnerPopupsOuverts);
+window.addEventListener('scroll', repositionnerPopupsOuverts, true);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', convertirAidesEnPopups);
+} else {
+    convertirAidesEnPopups();
+}
+
 // 🗑️ GESTION DE LA SUPPRESSION D'UN FTF AVEC SA PROPRE FENÊTRE
 function supprimerFtf(gcCode, nom) {
     const modal = document.getElementById('ftfConfirmModal');
@@ -2695,6 +2781,11 @@ document.addEventListener('keydown', function(event) {
             toggleBtn.dispatchEvent(new Event('change'));
         }
     }
+    // 4. Touche N seule = Mode sombre / clair
+    if (event.key.toLowerCase() === 'n') {
+        // Appelle directement la fonction existante qui gère déjà la sauvegarde (localStorage) et les graphiques
+        toggleDarkMode();
+    }
     
     // 3. Touche F = Fermer / Rouvrir tous les menus
     if (event.key.toLowerCase() === 'f' && !event.ctrlKey && !event.altKey && !event.metaKey) { 
@@ -2734,6 +2825,7 @@ document.addEventListener('keydown', function(event) {
                 map360Instance.invalidateSize();
             }
         }, 150);
+        
     }
 });
 

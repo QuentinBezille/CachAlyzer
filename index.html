@@ -20,10 +20,24 @@
 <div class="container">
     <div class="header-top">
         <div class="header-title">
-            <h1>🧭 Dashboard Geocaching Master Pro</h1>
-            <p>Statistiques exactes avec moteur Project-GC & Fonctionnalités Premium Débloquées</p>
+            <h1>🧭 Dashboard Geocaching</h1>
+            <p>Statistiques avec moteur Project-GC & Fonctionnalités Premium</p>
         </div>
         <div style="display:flex; gap:15px; align-items:center;">
+            
+
+            <!-- La boîte globale (relative) -->
+            <div class="popup-wrapper">
+                <button class="btn-help-hover">💻</button>
+                <div class="popup-content">
+                    <ol>
+                        <li><b>"P"</b> : Active le mode prévisionnel.</li>
+                        <li><b>"N"</b> : Switch le mode sombre/clair.</li>
+                        <li><b>"F"</b> : Ferme ou rouvre tous les menus.</li>
+                    </ol>
+                </div>
+            </div>
+            
             
 
             <button class="btn-clear" onclick="toggleDarkMode()" style="background: #475569;">🌙</button>
@@ -55,7 +69,7 @@
         <!-- ZONE 1 : CACHES (.gpx) -->
         <div class="upload-box" style="display:flex; flex-direction:column;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0;">1. DONNÉES PRINCIPALES</h3>
+                <h3 style="margin:0;">1. DONNÉES PRINCIPALES *</h3>
                 <button onclick="toggleAide('aideUploadCaches')" class="btn-aide">❓</button>
             </div>
             <div id="aideUploadCaches" class="aide-box" style="display:none; text-align:left;">
@@ -68,13 +82,13 @@
                 </ol>
             </div>
             <div style="display:flex; gap:8px; margin-top:10px;">
-                <div class="upload-btn" onclick="document.getElementById('gpxInput').click()" id="gpxBtn" style="flex:1; padding:14px;">📁 Caches (.gpx)</div>
+                <div class="upload-btn" onclick="document.getElementById('gpxInput').click()" id="gpxBtn" style="flex:1; padding:14px;">📁 Caches (.gpx)*</div>
                 <button class="btn-clear-small" onclick="clearSpecific('gpx')">🗑️</button>
             </div>
             
             
             <div style="display:flex; gap:8px; margin-top:10px;">
-                <div class="upload-btn" onclick="document.getElementById('csvInput').click()" id="csvBtn" style="flex:1; padding:14px;">📁 Labs (.txt)</div>
+                <div class="upload-btn" onclick="document.getElementById('csvInput').click()" id="csvBtn" style="flex:1; padding:14px;">📁 Labs (.txt)*</div>
                 <button class="btn-clear-small" onclick="clearSpecific('labs')">🗑️</button>
             </div>
         </div>
@@ -229,7 +243,7 @@
                 <h3>🎯 Matrice Difficulté / Terrain (Physiques)</h3>
                 <div style="display:flex; align-items:center; gap:10px; margin-left:auto;" onclick="event.stopPropagation()">
                     <div class="card-badge" id="fizzyBadge">0/81</div>
-                    <button onclick="toggleAide('aideMatriceDT')" class="btn-aide">❓ Aide</button>
+                    <button onclick="toggleAide('aideMatriceDT')" class="btn-aide">❓</button>
                 </div>
             </div>
             <div id="aideMatriceDT" class="aide-box" style="display:none;">
@@ -257,7 +271,7 @@
                 <h3>🗓️ Calendrier des 366 Jours</h3>
                 <div style="display:flex; align-items:center; gap:10px; margin-left:auto;" onclick="event.stopPropagation()">
                     <div class="card-badge" id="jours366Badge">0/366</div>
-                    <button onclick="toggleAide('aideGrid366')" class="btn-aide">❓ Aide</button>
+                    <button onclick="toggleAide('aideGrid366')" class="btn-aide">❓</button>
                 </div>
             </div>
             <div id="aideGrid366" class="aide-box" style="display:none;">
@@ -280,7 +294,7 @@
                 <h3>🗓️ Challenge Jasmer</h3>
                 <div style="display:flex; align-items:center; gap:10px; margin-left:auto;" onclick="event.stopPropagation()">
                     <div class="card-badge" id="jasmerBadge">0/0</div>
-                    <button onclick="toggleAide('aideJasmer')" class="btn-aide">❓ Aide</button>
+                    <button onclick="toggleAide('aideJasmer')" class="btn-aide">❓</button>
                 </div>
             </div>
             <div id="aideJasmer" class="aide-box" style="display:none;">
@@ -309,7 +323,7 @@
                         <button class="tab-btn" onclick="switch360Tab('table')">Table</button>
                         <button class="tab-btn" onclick="switch360Tab('carte')">Carte Sectorielle</button>
                     </div>
-                    <button onclick="toggleAide('aide360')" class="btn-aide">❓ Aide</button>
+                    <button onclick="toggleAide('aide360')" class="btn-aide">❓</button>
                 </div>
             </div>
             <div id="aide360" class="aide-box" style="display:none;">
@@ -389,7 +403,7 @@
                         <button class="tab-btn" onclick="switchExploitsTab('missedFtf')">🔍 FTF Oubliés</button>
                         <button class="tab-btn" onclick="switchExploitsTab('milestones')">🎖️ Paliers Atteints</button>
                     </div>
-                    <button onclick="toggleAide('aideExploits')" class="btn-aide">❓ Aide</button>
+                    <button onclick="toggleAide('aideExploits')" class="btn-aide">❓</button>
                 </div>
             </div>
             <div id="aideExploits" class="aide-box" style="display:none;">
@@ -510,7 +524,7 @@
                             <h4 style="color:#ca8a04; margin-top:0; margin-bottom:5px;">🔍 Recherche Hybride (TXT + GPX)</h4>
                             <p class="note" style="margin:0;">Le moteur hybride V5 calcule une <b>probabilité de FTF</b> basée sur vos logs et la chronologie.</p>
                         </div>
-                        <button onclick="toggleAide('ftfHelpBox')" class="btn-aide">❓ Aide complète</button>
+                        <button onclick="toggleAide('ftfHelpBox')" class="btn-aide">❓</button>
                     </div>
 
                     <div id="ftfHelpBox" class="aide-box" style="display:none;">
@@ -624,7 +638,7 @@
         <div class="card card-full" id="module-generateur">
     <div class="card-header">
         <h3>🛠️ Créateur de Checker Project-GC & Badge</h3>
-        <button onclick="toggleAide('aideGenerateur'); event.stopPropagation();" class="btn-aide" style="margin-left:auto;">❓ Aide</button>
+        <button onclick="toggleAide('aideGenerateur'); event.stopPropagation();" class="btn-aide" style="margin-left:auto;">❓</button>
     </div>
     <div id="aideGenerateur" class="aide-box" style="display:none; margin: 0 0 10px;">
         <strong>🛠️ À quoi sert cet outil ?</strong>
